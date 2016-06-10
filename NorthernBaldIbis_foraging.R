@@ -5,7 +5,7 @@
 # updated 29 Jan 2014 to adjust to new lme4 version, removed "control=list(maxIter=6000)" from lmer function call
 # recommended citation:
 ## Influence of feeding ecology on breeding success of the critically endangered Northern Bald Ibis Geronticus eremita in southern Turkey
-## CAN YENIYURT, STEFFEN OPPEL, S‹REYYA –SFENDIYAROGLU, G‹L«IN ÷ZKINACI, ITRI LEVENT ERKOL, CHRISTOPHER G. R. BOWDEN
+## CAN YENIYURT, STEFFEN OPPEL, S√úREYYA √êSFENDIYAROGLU, G√úL√áIN √ñZKINACI, ITRI LEVENT ERKOL, CHRISTOPHER G. R. BOWDEN
 ## Bird Conservation International
 
 
@@ -54,7 +54,7 @@ library(Hmisc)
 
 #######################################################################################
 #
-#  IS BREEDING SUCCESS HIGHER FOR BIRDS THAT FEED MORE FREQUENTLY AT FEEDING STATION?
+#  IS BREEDING PROPENSITY AND PERFORMANCE HIGHER FOR BIRDS THAT FEED MORE FREQUENTLY AT FEEDING STATION?
 #
 #######################################################################################
 
@@ -70,8 +70,6 @@ aggregate(propPres~breed, NBI, FUN=max)
 
 ### correlate attendance probability with nesting success
 cor.test(NBIbreed$breed_succ,NBIbreed$propPres)
-plot(NBI$breed_succ~NBI$propPres, las=1, xlab="Proportion of feeding events attended", ylab="Breeding success (fledglings/egg)", pch=16, cex.lab=1.5, cex.axis=1.5, cex=1.5)
-
 
 ### test whether attendance proportion at feeding events influences number of fledglings, number of hatched eggs, and number of eggs laid
 fl<-glmer(fledged~propPres+(1|Year/Nest_ID), family=poisson, data=NBIbreed)
@@ -90,7 +88,7 @@ summary(bp)
 
 #######################################################################################
 #
-#  IS BREEDING SUCCESS RELATED TO FREQUENCY OF OBSERVATION IN PARTICULAR FIELDS?
+#  IS PRODUCTIVITY RELATED TO FREQUENCY OF OBSERVATION IN PARTICULAR FIELDS?
 #
 #######################################################################################
 
@@ -135,21 +133,20 @@ AIC_TABLE
 
 #######################################################################################
 #
-#  IS BREEDING SUCCESS RELATED TO FREQUENCY OF OBSERVATION IN PARTICULAR CROPS?
+#  IS PRODUCTIVITY RELATED TO FREQUENCY OF OBSERVATION IN PARTICULAR CROPS?
 #
 #######################################################################################
 
 NBIcropbreed<-NBIcrop[NBIcrop$breed==1,]
 
-m1<-glmer(fledged~Eggplant+(1|Nest_ID), data=NBIcropbreed,family=poisson)
-m2<-glmer(fledged~Fallow+(1|Nest_ID), data=NBIcropbreed,family=poisson)
-m3<-glmer(fledged~Letture+(1|Nest_ID), data=NBIcropbreed,family=poisson)
-m4<-glmer(fledged~Manure+(1|Nest_ID), data=NBIcropbreed,family=poisson)
-m5<-glmer(fledged~Mint+(1|Nest_ID), data=NBIcropbreed,family=poisson)
-m6<-glmer(fledged~Pasture+(1|Nest_ID), data=NBIcropbreed,family=poisson)
-m7<-glmer(fledged~Seedling+(1|Nest_ID), data=NBIcropbreed,family=poisson)
-m8<-glmer(fledged~1+(1|Nest_ID), data=NBIcropbreed,family=poisson)
-#m8<-glmer(fledged~Letture+Manure+Mint+(1|Nest_ID), data=breeders_crop,family=poisson)
+m1<-glmer(fledged~Eggplant+(1|Nest_ID), data=NBIcrop,family=poisson)
+m2<-glmer(fledged~Fallow+(1|Nest_ID), data=NBIcrop,family=poisson)
+m3<-glmer(fledged~Letture+(1|Nest_ID), data=NBIcrop,family=poisson)
+m4<-glmer(fledged~Manure+(1|Nest_ID), data=NBIcrop,family=poisson)
+m5<-glmer(fledged~Mint+(1|Nest_ID), data=NBIcrop,family=poisson)
+m6<-glmer(fledged~Pasture+(1|Nest_ID), data=NBIcrop,family=poisson)
+m7<-glmer(fledged~Seedling+(1|Nest_ID), data=NBIcrop,family=poisson)
+m8<-glmer(fledged~1+(1|Nest_ID), data=NBIcrop,family=poisson)
 
 AIC_TABLE<-aictab(cand.set=list(m1,m2,m3,m4,m5,m6,m7,m8),modnames=c('egg','fal','let','shit','mint','past','seed','null'),sort = TRUE, c.hat = 1, second.ord = TRUE, nobs = NULL)
 AIC_TABLE
@@ -242,27 +239,5 @@ m10<-glm(cbind(Number,Total)~1, data = behav[behav$Behaviour=='Foraging',], fami
 
 AIC_TABLE<-aictab(cand.set=list(m0,m1,m2,m3,m4,m6,m7,m8,m10),modnames=c('month','crop type','landuse','habitat','time full','month*crop type','month*landuse','month*habitat','null'),sort = TRUE, c.hat = 1, second.ord = TRUE, nobs = NULL)
 AIC_TABLE
-
-
-
-## PLOT AVERAGE BEHAVIOUR PER MONTH FOR EACH FIELD SEPARATELY
-
-
-plotdat<-data.frame(CROP=rep(unique(behav$CROP),4), month=rep(seq(3:6),each=7))
-plotdat$pred<-predict(m6, newdat=plotdat, type='response', se=T)$fit
-plotdat$se<-predict(m6, newdat=plotdat, type='response', se=T)$se.fit
-plotdat$lcl<-plotdat$pred-1.96*plotdat$se
-plotdat$ucl<-plotdat$pred+1.96*plotdat$se
-
-
-par(mfrow=c(2,2), mar=c(4,5,1,0), oma=c(0,0,1,1))
-
-for (s in 1:4){
-p<-plotdat[plotdat$month==s,]
-errbar(1:7,p$pred,p$lcl,p$ucl,frame=F, ylim=c(0,1), pch=16, xlab="", ylab="Proportion of flock foraging",axes=F, cex.axis=1.4,cex.lab=1.6)
-axis(1, at=c(1,2,3,4,5,6,7), labels=p$CROP, cex.axis=1.5, cex=1.5, cex.lab=1.5)
-axis(2, at=seq(0,1,0.2), labels=T, cex.axis=1.5, cex.lab=1.5, las=1)
-}
-
 
 
